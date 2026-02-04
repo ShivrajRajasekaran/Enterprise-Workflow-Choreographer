@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBM Watson Orchestrate - Incident Response Workflow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://www.ibm.com/brand/experience-guides/developer/8f4e3cc2b5d52354a6d43c8edba1e3c9/01_8-bar-reverse.svg" alt="IBM" class="ibm-logo">
+            <h2>Watson Orchestrate</h2>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </li>
+            <li class="nav-item" data-page="incidents">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Incidents</span>
+            </li>
+            <li class="nav-item" data-page="workflow">
+                <i class="fas fa-project-diagram"></i>
+                <span>Workflow</span>
+            </li>
+            <li class="nav-item" data-page="tasks">
+                <i class="fas fa-tasks"></i>
+                <span>Tasks</span>
+            </li>
+            <li class="nav-item" data-page="integrations">
+                <i class="fas fa-plug"></i>
+                <span>Integrations</span>
+            </li>
+            <li class="nav-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">SR</div>
+                <div class="user-details">
+                    <span class="user-name">Shivraj R</span>
+                    <span class="user-role">Admin</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search incidents...">
+                </div>
+                <button class="btn btn-primary" id="newIncidentBtn">
+                    <i class="fas fa-plus"></i>
+                    New Incident
+                </button>
+                <div class="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Page -->
+        <section class="page active" id="dashboard-page">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon critical">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Critical</h3>
+                        <p class="stat-value" id="critical-count">2</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon high">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>High</h3>
+                        <p class="stat-value" id="high-count">5</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon medium">
+                        <i class="fas fa-exclamation"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Medium</h3>
+                        <p class="stat-value" id="medium-count">8</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon resolved">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Resolved</h3>
+                        <p class="stat-value" id="resolved-count">24</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>Incident Status Overview</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Incidents by Category</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Incidents Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Recent Incidents</h3>
+                    <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <table class="incidents-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Assigned To</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incidents-tbody">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Incidents Page -->
+        <section class="page" id="incidents-page">
+            <div class="page-header">
+                <h2>All Incidents</h2>
+                <div class="filters">
+                    <select class="filter-select" id="severity-filter">
+                        <option value="">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    <select class="filter-select" id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+            <div class="incidents-list" id="incidents-list">
+                <!-- Dynamic content -->
+            </div>
+        </section>
+
+        <!-- Workflow Page -->
+        <section class="page" id="workflow-page">
+            <div class="page-header">
+                <h2>Incident Response Workflow</h2>
+                <p class="page-description">IBM Watson Orchestrate automated 7-step workflow</p>
+            </div>
+            
+            <div class="workflow-container">
+                <div class="workflow-step" data-step="1">
+                    <div class="step-icon servicenow">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>1. Create ServiceNow Ticket</h4>
+                        <p>Create and classify incident with details</p>
+                        <span class="step-tool">ServiceNow</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="workflow-connector"></div>
+                
+                <div class="workflow-step" data-step="2">
+                    <div class="step-icon slack">
+                        <i class="fab fa-slack"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>2. Send Slack Alert</h4>
+                        <p>Alert #incident-response channel</p>
+                        <span class="step-tool">Slack</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="workflow-connector"></div>
+                
+                <div class="workflow-step" data-step="3">
+                    <div class="step-icon github">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>3. Gather Diagnostic Information</h4>
+                        <p>Collect commits, logs, and metrics</p>
+                        <span class="step-tool">GitHub</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="workflow-connector"></div>
+                
+                <div class="workflow-step" data-step="4">
+                    <div class="step-icon watson">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>4. Analyze Root Cause</h4>
+                        <p>AI-powered root cause analysis</p>
+                        <span class="step-tool">IBM watsonx</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="workflow-connector"></div>
+                
+                <div class="workflow-step" data-step="5">
+                    <div class="step-icon confluence">
+                        <i class="fab fa-confluence"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>5. Create Confluence Page</h4>
+                        <p>Document incident and analysis</p>
+                        <span class="step-tool">Confluence</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="workflow-connector"></div>
+                
+                <div class="workflow-step" data-step="6">
+                    <div class="step-icon jira">
+                        <i class="fab fa-jira"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>6. Assign and Notify</h4>
+                        <p>Assign to team via Jira, notify via Slack</p>
+                        <span class="step-tool">Jira + Slack</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="workflow-connector"></div>
+                
+                <div class="workflow-step" data-step="7">
+                    <div class="step-icon monitor">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="step-content">
+                        <h4>7. Monitor and Update</h4>
+                        <p>Continuous monitoring and updates</p>
+                        <span class="step-tool">All Systems</span>
+                    </div>
+                    <div class="step-status pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tasks Page -->
+        <section class="page" id="tasks-page">
+            <div class="page-header">
+                <h2>Task List</h2>
+            </div>
+            <div class="tasks-container">
+                <div class="task-column">
+                    <h3 class="column-title"><i class="fas fa-inbox"></i> To Do</h3>
+                    <div class="task-list" id="todo-tasks">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+                <div class="task-column">
+                    <h3 class="column-title"><i class="fas fa-spinner"></i> In Progress</h3>
+                    <div class="task-list" id="inprogress-tasks">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+                <div class="task-column">
+                    <h3 class="column-title"><i class="fas fa-check"></i> Completed</h3>
+                    <div class="task-list" id="completed-tasks">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Integrations Page -->
+        <section class="page" id="integrations-page">
+            <div class="page-header">
+                <h2>Tool Integrations</h2>
+                <p class="page-description">Connected enterprise tools for workflow automation</p>
+            </div>
+            <div class="integrations-grid">
+                <div class="integration-card connected">
+                    <div class="integration-icon servicenow">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h4>ServiceNow</h4>
+                    <p>Incident Management</p>
+                    <span class="status-badge connected"><i class="fas fa-check"></i> Connected</span>
+                </div>
+                <div class="integration-card connected">
+                    <div class="integration-icon slack">
+                        <i class="fab fa-slack"></i>
+                    </div>
+                    <h4>Slack</h4>
+                    <p>Team Communication</p>
+                    <span class="status-badge connected"><i class="fas fa-check"></i> Connected</span>
+                </div>
+                <div class="integration-card connected">
+                    <div class="integration-icon github">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <h4>GitHub</h4>
+                    <p>Code Repository</p>
+                    <span class="status-badge connected"><i class="fas fa-check"></i> Connected</span>
+                </div>
+                <div class="integration-card connected">
+                    <div class="integration-icon confluence">
+                        <i class="fab fa-confluence"></i>
+                    </div>
+                    <h4>Confluence</h4>
+                    <p>Documentation</p>
+                    <span class="status-badge connected"><i class="fas fa-check"></i> Connected</span>
+                </div>
+                <div class="integration-card connected">
+                    <div class="integration-icon jira">
+                        <i class="fab fa-jira"></i>
+                    </div>
+                    <h4>Jira</h4>
+                    <p>Task Management</p>
+                    <span class="status-badge connected"><i class="fas fa-check"></i> Connected</span>
+                </div>
+                <div class="integration-card connected">
+                    <div class="integration-icon watson">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4>IBM watsonx</h4>
+                    <p>AI Orchestration</p>
+                    <span class="status-badge connected"><i class="fas fa-check"></i> Connected</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section class="page" id="settings-page">
+            <div class="page-header">
+                <h2>Settings</h2>
+            </div>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Workflow Configuration</h3>
+                    <div class="setting-item">
+                        <label>Auto-create ServiceNow tickets</label>
+                        <input type="checkbox" checked class="toggle">
+                    </div>
+                    <div class="setting-item">
+                        <label>Enable Slack notifications</label>
+                        <input type="checkbox" checked class="toggle">
+                    </div>
+                    <div class="setting-item">
+                        <label>Auto-assign incidents</label>
+                        <input type="checkbox" checked class="toggle">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Notification Settings</h3>
+                    <div class="setting-item">
+                        <label>Default Slack Channel</label>
+                        <input type="text" value="#incident-response" class="setting-input">
+                    </div>
+                    <div class="setting-item">
+                        <label>Escalation Timeout (minutes)</label>
+                        <input type="number" value="30" class="setting-input">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- New Incident Modal -->
+    <div class="modal" id="newIncidentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Incident</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <form id="newIncidentForm">
+                <div class="form-group">
+                    <label>Incident Title</label>
+                    <input type="text" id="incidentTitle" required placeholder="Brief description of the incident">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="incidentDescription" rows="4" required placeholder="Detailed description of the incident"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Severity</label>
+                        <select id="incidentSeverity" required>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="incidentCategory" required>
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="application">Application</option>
+                            <option value="database">Database</option>
+                            <option value="network">Network</option>
+                            <option value="security">Security</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Affected Services</label>
+                    <input type="text" id="affectedServices" placeholder="e.g., api-gateway, user-service">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Create & Start Workflow
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Incident Detail Modal -->
+    <div class="modal" id="incidentDetailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Incident Details</h2>
+                <button class="close-btn" id="closeDetailModal">&times;</button>
+            </div>
+            <div class="incident-detail-content" id="incidentDetailContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
